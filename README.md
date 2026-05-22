@@ -1,9 +1,9 @@
 # Backpack ↔ Raydium (Solana)
 
-Мониторинг спреда между **Backpack Exchange** (CEX, публичный тикер) и **Raydium** (DEX).  
-Котировка Raydium берётся **только с пулов Raydium** через Jupiter Quote API (`dexes=Raydium`) — это не торговля «через агрегатор по всем DEX».
+Spread monitoring between **Backpack Exchange** (CEX, public ticker) and **Raydium** (DEX).
+The Raydium quote is fetched **only from Raydium pools** via the Jupiter Quote API (`dexes=Raydium`) — this is not trading "through an aggregator across all DEXes".
 
-## Запуск
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
@@ -11,32 +11,32 @@ copy .env.example .env   # Windows
 python main.py --monitor
 ```
 
-### GUI (окно с вкладками, стакан, балансы, кнопки без авто-торговли)
+### GUI (tabbed window, order book, balances, buttons without auto-trading)
 
 ```bash
 python gui_app.py
 ```
 
-- Вкладка **Мониторинг** — цены Backpack vs Raydium, спред, стакан CEX, «возможность», балансы Solana и Backpack.
-- Вкладка **Торговля** — своп **только по кнопке** и после `Да` в диалоге (Raydium через Jupiter). Авто-сделок нет.
+- **Monitoring** Tab — Backpack vs Raydium prices, spread, CEX order book, "opportunity", Solana and Backpack balances.
+- **Trading** Tab — swap **only by button click** and after confirming `Yes` in the dialog (Raydium via Jupiter). There are no automated trades.
 
-### Ошибка `[Errno 11001] getaddrinfo failed` (Windows)
+### `[Errno 11001] getaddrinfo failed` Error (Windows)
 
-- **Стакан Backpack 400:** параметр `limit` у `/api/v1/depth` только `5,10,20,50,100,500,1000`. Любое другое значение даёт 400 — в коде лимит нормализуется автоматически.
-- **Jupiter + SOCKS SSL EOF:** попробуй **`HTTPX_VERIFY_SSL=false`** в `.env` (только если доверяешь прокси) или прокси **`https://`**. Схема **`socks5h://`** в `.env` допустима, но **автоматически превращается в `socks5://`**, т.к. связка `httpx==0.27` + `httpcore` не понимает `socks5h` (иначе ошибка *Unknown scheme*).
+- **Backpack Order Book 400:** the `limit` parameter for `/api/v1/depth` only accepts `5,10,20,50,100,500,1000`. Any other value returns a 400 error — in the code, the limit is normalized automatically.
+- **Jupiter + SOCKS SSL EOF:** try setting **`HTTPX_VERIFY_SSL=false`** in your `.env` (only if you trust the proxy) or use an **`https://`** proxy. The **`socks5h://`** scheme in `.env` is allowed, but **is automatically converted to `socks5://`**, because the combination of `httpx==0.27` + `httpcore` does not understand `socks5h` (otherwise you get an *Unknown scheme* error).
 
-DNS не резолвит хост (часто `quote-api.jup.ag`). Попробуй: другой DNS, VPN, или **`PROXY_URL`**. Нужен `pip install -r requirements.txt` с `httpx[socks]` для SOCKS5. Цена SOL может подтянуться с CoinGecko, но котировка Raydium без доступа к Jupiter не придёт.
+DNS fails to resolve the host (often `quote-api.jup.ag`). Try: a different DNS, VPN, or set **`PROXY_URL`**. You need `pip install -r requirements.txt` which includes `httpx[socks]` for SOCKS5 support. The SOL price might be fetched from CoinGecko, but the Raydium quote won't arrive without access to Jupiter.
 
-- Без `BP_TOKEN_MINT` — демо **SOL/USDC**.
-- С `BP_TOKEN_MINT` — **BP/USDC** (символ на Backpack: `BACKPACK_SYMBOL_BP_USDC`).
+- Without `BP_TOKEN_MINT` — demo uses **SOL/USDC**.
+- With `BP_TOKEN_MINT` — uses **BP/USDC** (symbol on Backpack: `BACKPACK_SYMBOL_BP_USDC`).
 
-## Где смотреть вывод
+## Where to view the output
 
-- Консоль (`INFO`)
-- Файл `arbi.log` (`DEBUG`)
+- Console (`INFO`)
+- `arbi.log` file (`DEBUG`)
 
-## Исполнение сделок
+## Trade Execution
 
-- **Backpack**: нужен [подписанный REST API](https://docs.backpack.exchange/) (ED25519), в коде пока не реализовано.
-- **Raydium**: через Jupiter `/v6/swap` + подпись кошельком (см. `executor.py`).
-- По умолчанию **`ENABLE_CHAIN_EXECUTE=false`** — только сигналы. При `true` возможен **только** частичный сценарий «купить base на Raydium» при направлении Raydium→Backpack (продажа на CEX вручную).
+- **Backpack**: requires a [signed REST API](https://docs.backpack.exchange/) (ED25519), which is not yet implemented in the code.
+- **Raydium**: executed via Jupiter `/v6/swap` + wallet signature (see `executor.py`).
+- By default, **`ENABLE_CHAIN_EXECUTE=false`** — signals only. If `true`, **only** a partial scenario of "buy base on Raydium" is possible for the Raydium→Backpack direction (selling on CEX must be done manually).
